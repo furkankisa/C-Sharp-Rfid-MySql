@@ -1,0 +1,136 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.Sql;
+using System.Data.SqlClient;
+using System.Data.SqlTypes;
+using System.IO.Ports;
+using MySql.Data.MySqlClient;
+using MySql.Data;
+
+
+namespace OgrenciSistemi
+{
+    public partial class Form1 : Form
+    {
+        
+
+        public Form1()
+        {
+            InitializeComponent();
+
+            
+
+        }
+        MySqlConnection baglanti = new MySqlConnection("Server=localhost;Port=3306;Database=test;Uid=root;Pwd='';Encrypt=false;AllowUserVariables=True;UseCompression=True;");
+
+        private void button2_Click(object sender,EventArgs e)
+        {
+            kayitEkle();
+
+        }
+        private void kayitEkle()
+        {
+
+            baglanti.Open();
+            DateTime deneme = DateTime.Now;
+            string a =deneme.ToString("yyyy-MM-dd H:mm:ss");
+            zaman.Text = a;
+            if (ad.Text.Length != 0 && RFIDNO.Text.Length !=0) {
+            string cmdText = "Insert into kayitlar(isim ,soyad ,okulno ,bolum ,adres ,telefon ,RFIDNO,zaman )values ('"+ad.Text+"','"+soyad.Text+"' ,'"+okulno.Text+ "' ,'"+bolum.Text+"' ,'"+adres.Text+"' ,'"+telefon.Text+"' ,'"+RFIDNO.Text+"','"+zaman.Text+"')";
+            MySqlCommand cmd = new MySqlCommand(cmdText, baglanti);
+            
+            cmd.ExecuteNonQuery();
+            
+
+            MessageBox.Show("Kayıt Eklendi!");
+            ad.Clear();
+            soyad.Clear();
+            okulno.Clear();
+            bolum.Clear();
+            adres.Clear();
+            telefon.Clear();
+            RFIDNO.Clear();
+            zaman.Clear();
+               
+            }
+            else if (ad.Text.Length == 0 && RFIDNO.Text.Length==0) {
+                MessageBox.Show("Bilgileri Kontrol Ediniz!!");
+            }
+
+
+
+            baglanti.Close();
+
+
+        }
+        private void button1_Click(object sender, EventArgs e)
+        {
+            serialPort1.Open();
+            
+
+
+
+        }
+
+        private void serialPort1_DataReceived(object sender,System.IO.Ports.SerialDataReceivedEventArgs e)
+        {
+           if (!serialPort1.IsOpen) { 
+           string datam = serialPort1.ReadLine();
+           RFIDNO.Text = datam;
+            }
+           else
+            {
+                string datam = serialPort1.ReadLine();
+                RFIDNO.Text = datam;
+            }
+            baglanti.Open();
+           
+            MySqlCommand cmd = new MySqlCommand("Select * from kayitlar where RFIDNO = '" + RFIDNO.Text + "'", baglanti);
+            MySqlDataReader dr = cmd.ExecuteReader();
+            if (dr.Read())
+            {
+                ad.Text = dr["isim"].ToString();
+                soyad.Text = dr["soyad"].ToString();
+                okulno.Text = dr["okulno"].ToString();
+                bolum.Text = dr["bolum"].ToString();
+                adres.Text = dr["adres"].ToString();
+                telefon.Text = dr["telefon"].ToString();
+                zaman.Text = dr["zaman"].ToString();
+            }
+            else 
+            {
+                ad.Clear();
+                soyad.Clear();
+                okulno.Clear();
+                bolum.Clear();
+                adres.Clear();
+                telefon.Clear();
+                zaman.Clear();
+            }
+
+            baglanti.Close();
+        }
+
+        
+        
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            System.Windows.Forms.Form.CheckForIllegalCrossThreadCalls = false;
+
+
+
+
+        }
+
+
+
+
+    }
+}
